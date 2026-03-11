@@ -1,0 +1,273 @@
+
+# ============================================================
+# soc_top.upf - Unified Power Format for Industry SoC
+# IEEE 1801 UPF 2.1
+# Power domains: PD_CPU0, PD_CPU1, PD_GPU, PD_MEM, PD_IO,
+#                PD_PERIPH, PD_CRYPTO, PD_PCIE, PD_USB,
+#                PD_ETH, PD_ALWAYS_ON
+# ============================================================
+
+##########################################################
+# Supply Nets and Supply Ports
+##########################################################
+
+# Main supply nets
+create_supply_net VDD            -domain PD_ALWAYS_ON
+create_supply_net VSS            -domain PD_ALWAYS_ON
+create_supply_net VDD_CPU0       -domain PD_CPU0
+create_supply_net VDD_CPU1       -domain PD_CPU1
+create_supply_net VDD_GPU        -domain PD_GPU
+create_supply_net VDD_MEM        -domain PD_MEM
+create_supply_net VDD_IO         -domain PD_IO
+create_supply_net VDD_PERIPH     -domain PD_PERIPH
+create_supply_net VDD_CRYPTO     -domain PD_CRYPTO
+create_supply_net VDD_PCIE       -domain PD_PCIE
+create_supply_net VDD_USB        -domain PD_USB
+create_supply_net VDD_ETH        -domain PD_ETH
+
+# Create supply ports
+create_supply_port VDD -direction in
+create_supply_port VSS -direction in
+create_supply_port VDD_CPU0_PORT -direction in
+create_supply_port VDD_CPU1_PORT -direction in
+create_supply_port VDD_GPU_PORT  -direction in
+create_supply_port VDD_MEM_PORT  -direction in
+create_supply_port VDD_IO_PORT   -direction in
+
+# Connect ports to nets
+connect_supply_net VDD       -ports VDD
+connect_supply_net VSS       -ports VSS
+connect_supply_net VDD_CPU0  -ports VDD_CPU0_PORT
+connect_supply_net VDD_CPU1  -ports VDD_CPU1_PORT
+connect_supply_net VDD_GPU   -ports VDD_GPU_PORT
+connect_supply_net VDD_MEM   -ports VDD_MEM_PORT
+connect_supply_net VDD_IO    -ports VDD_IO_PORT
+
+##########################################################
+# Power Domains
+##########################################################
+
+# Always-On Domain (reference domain)
+create_power_domain PD_ALWAYS_ON \
+    -elements {u_por u_rst u_ao u_clkgen u_dtm u_dm} \
+    -supply {primary VDD}
+
+# CPU Core 0 Domain
+create_power_domain PD_CPU0 \
+    -elements {u_cpu/u_core0} \
+    -supply {primary VDD_CPU0} \
+    -supply {retention VDD}
+
+# CPU Core 1 Domain
+create_power_domain PD_CPU1 \
+    -elements {u_cpu/u_core1} \
+    -supply {primary VDD_CPU1} \
+    -supply {retention VDD}
+
+# GPU Domain
+create_power_domain PD_GPU \
+    -elements {u_gpu} \
+    -supply {primary VDD_GPU}
+
+# Memory/Cache Domain (L2 + L3 + SRAMs)
+create_power_domain PD_MEM \
+    -elements {u_l1i0 u_l1d0 u_l2 u_l3} \
+    -supply {primary VDD_MEM} \
+    -supply {retention VDD}
+
+# IO Domain
+create_power_domain PD_IO \
+    -elements {u_gpio u_uart0 u_timer u_wdt} \
+    -supply {primary VDD_IO}
+
+# Peripheral Domain (APB, SPI, I2C, PWM)
+create_power_domain PD_PERIPH \
+    -elements {u_dma} \
+    -supply {primary VDD}
+
+# Crypto Domain
+create_power_domain PD_CRYPTO \
+    -elements {u_crypto} \
+    -supply {primary VDD_CRYPTO}
+
+# PCIe Domain
+create_power_domain PD_PCIE \
+    -elements {u_pcie} \
+    -supply {primary VDD_PCIE}
+
+# USB Domain
+create_power_domain PD_USB \
+    -elements {u_usb} \
+    -supply {primary VDD}
+
+# Ethernet Domain
+create_power_domain PD_ETH \
+    -elements {u_eth} \
+    -supply {primary VDD_ETH}
+
+##########################################################
+# Power States
+##########################################################
+
+add_power_state PD_CPU0 \
+    -state ON          {-supply_expr {VDD_CPU0 == {FULL_ON, 0.85}}}  \
+    -state RETENTION   {-supply_expr {VDD_CPU0 == {OFF}      && VDD == {FULL_ON, 0.85}}} \
+    -state OFF         {-supply_expr {VDD_CPU0 == {OFF}}}
+
+add_power_state PD_CPU1 \
+    -state ON          {-supply_expr {VDD_CPU1 == {FULL_ON, 0.85}}} \
+    -state RETENTION   {-supply_expr {VDD_CPU1 == {OFF}      && VDD == {FULL_ON, 0.85}}} \
+    -state OFF         {-supply_expr {VDD_CPU1 == {OFF}}}
+
+add_power_state PD_GPU \
+    -state ON          {-supply_expr {VDD_GPU == {FULL_ON, 0.85}}} \
+    -state OFF         {-supply_expr {VDD_GPU == {OFF}}}
+
+add_power_state PD_CRYPTO \
+    -state ON          {-supply_expr {VDD_CRYPTO == {FULL_ON, 0.85}}} \
+    -state OFF         {-supply_expr {VDD_CRYPTO == {OFF}}}
+
+add_power_state PD_ALWAYS_ON \
+    -state ON          {-supply_expr {VDD == {FULL_ON, 0.85}}}
+
+##########################################################
+# Power Switches
+##########################################################
+
+create_power_switch SW_CPU0 \
+    -domain PD_CPU0 \
+    -input_supply_port  {in_port   VDD} \
+    -output_supply_port {out_port  VDD_CPU0} \
+    -control_port       {ctrl      u_pd_cpu0_ctrl/sw_en} \
+    -ack_port           {ack       u_pd_cpu0_ctrl/sw_ack} \
+    -on_state  {on_state  in_port {ctrl == 1}} \
+    -off_state {off_state {}}
+
+create_power_switch SW_CPU1 \
+    -domain PD_CPU1 \
+    -input_supply_port  {in_port   VDD} \
+    -output_supply_port {out_port  VDD_CPU1} \
+    -control_port       {ctrl      u_pd_cpu1_ctrl/sw_en} \
+    -ack_port           {ack       u_pd_cpu1_ctrl/sw_ack} \
+    -on_state  {on_state  in_port {ctrl == 1}} \
+    -off_state {off_state {}}
+
+create_power_switch SW_GPU \
+    -domain PD_GPU \
+    -input_supply_port  {in_port   VDD} \
+    -output_supply_port {out_port  VDD_GPU} \
+    -control_port       {ctrl      u_ao/pd_pwr_en[5]} \
+    -on_state  {on_state  in_port {ctrl == 1}} \
+    -off_state {off_state {}}
+
+create_power_switch SW_CRYPTO \
+    -domain PD_CRYPTO \
+    -input_supply_port  {in_port   VDD} \
+    -output_supply_port {out_port  VDD_CRYPTO} \
+    -control_port       {ctrl      u_ao/pd_pwr_en[10]} \
+    -on_state  {on_state  in_port {ctrl == 1}} \
+    -off_state {off_state {}}
+
+##########################################################
+# Isolation Cells
+##########################################################
+
+set_isolation CPU0_ISO \
+    -domain PD_CPU0 \
+    -applies_to outputs \
+    -clamp_value 0 \
+    -isolation_supply_net VDD \
+    -isolation_control {u_pd_cpu0_ctrl/iso_en} \
+    -elements {u_cpu/u_core0}
+
+set_isolation CPU1_ISO \
+    -domain PD_CPU1 \
+    -applies_to outputs \
+    -clamp_value 0 \
+    -isolation_supply_net VDD \
+    -isolation_control {u_pd_cpu1_ctrl/iso_en}
+
+set_isolation GPU_ISO \
+    -domain PD_GPU \
+    -applies_to outputs \
+    -clamp_value 0 \
+    -isolation_supply_net VDD \
+    -isolation_control {u_ao/pd_pwr_en[5]} \
+    -location parent
+
+set_isolation CRYPTO_ISO \
+    -domain PD_CRYPTO \
+    -applies_to outputs \
+    -clamp_value 0 \
+    -isolation_supply_net VDD \
+    -isolation_control {u_ao/pd_pwr_en[10]} \
+    -location parent
+
+##########################################################
+# Level Shifters
+##########################################################
+
+# CPU0 (0.85V) -> Always-On (0.85V nominal, but may vary under DVFS)
+set_level_shifter CPU0_LS \
+    -domain PD_CPU0 \
+    -applies_to outputs \
+    -threshold 0.10 \
+    -no_shift \
+    -elements {u_cpu/u_core0}
+
+# GPU (0.85V) -> Memory (may be 0.8V)
+set_level_shifter GPU_LS \
+    -domain PD_GPU \
+    -applies_to outputs \
+    -threshold 0.05 \
+    -input_supply_net  VDD_GPU \
+    -output_supply_net VDD_MEM
+
+# PCIe (1.8V IO) -> Core (0.85V)
+set_level_shifter PCIE_LS \
+    -domain PD_PCIE \
+    -applies_to outputs \
+    -threshold 0.50 \
+    -input_supply_net  VDD_PCIE \
+    -output_supply_net VDD
+
+##########################################################
+# Retention
+##########################################################
+
+set_retention CPU0_RET \
+    -domain PD_CPU0 \
+    -retention_supply_net VDD \
+    -retention_control {save  u_pd_cpu0_ctrl/ret_en} \
+    -retention_control {restore u_pd_cpu0_ctrl/nret_en} \
+    -elements {u_cpu/u_core0/u_prf u_cpu/u_core0/u_csr}
+
+set_retention CPU1_RET \
+    -domain PD_CPU1 \
+    -retention_supply_net VDD \
+    -retention_control {save    u_pd_cpu1_ctrl/ret_en} \
+    -retention_control {restore u_pd_cpu1_ctrl/nret_en}
+
+set_retention MEM_RET \
+    -domain PD_MEM \
+    -retention_supply_net VDD \
+    -retention_control {save    u_ao/pd_pwr_en[3]} \
+    -retention_control {restore u_ao/pd_pwr_en[3]}
+
+##########################################################
+# DVFS (voltage islands)
+##########################################################
+
+# CPU voltage island: VDD_CPU (0.75V - 0.95V DVFS range)
+create_supply_set SS_CPU_DVFS \
+    -function {primary VDD_CPU0} \
+    -function {nwell   VDD}
+
+# Memory voltage island: VDD_MEM (fixed 0.85V for SRAM stability)
+create_supply_set SS_MEM \
+    -function {primary VDD_MEM}
+
+##########################################################
+# Check Command
+##########################################################
+check_power -verbose
