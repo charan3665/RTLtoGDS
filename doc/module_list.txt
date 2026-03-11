@@ -1,0 +1,201 @@
+# Module List - Industry SoC RTL-to-GDSII
+# Total: ~160 Verilog modules
+# Generated: 2026-03-10
+
+## CPU Subsystem (17 modules)
+cpu/core0/fetch_unit.v             - OoO fetch, BTB, RAS, I-TLB interface
+cpu/core0/decode_unit.v            - RV64IMAFDC full decode, all extensions
+cpu/core0/rename_unit.v            - Register rename, RAT, free list
+cpu/core0/issue_queue.v            - 32-entry unified IQ, age-based select
+cpu/core0/execution_units.v        - ALU, 3-stage MUL, iterative DIV, BRU
+cpu/core0/rob.v                    - 128-entry ROB, in-order retirement
+cpu/core0/lsu.v                    - Load/store unit, SQ/LQ, D-TLB
+cpu/core0/branch_predictor.v       - TAGE hybrid predictor (4-table)
+cpu/core0/fpu.v                    - IEEE754 DP FPU (FADD/FMUL/FDIV/FMA)
+cpu/core0/csr_unit.v               - Full M/S/U CSR, trap handling
+cpu/core0/physical_regfile.v       - 128-entry phys regfile, 10R/6W
+cpu/core0/cpu_core0_top.v          - Core 0 top integration
+cpu/core1/cpu_core1_top.v          - Core 1 (HART_ID=1)
+cpu/common/mmu.v                   - Sv39 3-level page table walker
+cpu/common/itlb.v                  - 32-entry ITLB, PLRU, ASID
+cpu/common/dtlb.v                  - 64-entry DTLB, PLRU, RW perm check
+cpu/cpu_cluster.v                  - Dual-core cluster, shared MMU
+
+## Cache Subsystem (14 modules)
+cache/l1i/l1i_cache.v              - 32KB 4-way I-cache, VIPT, pipeline
+cache/l1i/l1i_tag.v                - L1I tag SRAM array
+cache/l1i/l1i_data.v               - L1I data SRAM array
+cache/l1d/l1d_cache.v              - 32KB 4-way D-cache, WB/WA, AMO
+cache/l1d/l1d_tag.v                - L1D tag SRAM
+cache/l1d/l1d_data.v               - L1D data SRAM with byte enables
+cache/l1d/l1d_mshr.v               - 8-entry MSHR, non-blocking
+cache/l2/l2_cache.v                - 512KB 8-way unified, MESI, 4-port
+cache/l2/l2_tag.v                  - L2 MESI tag array
+cache/l2/l2_data.v                 - L2 data array
+cache/l2/l2_directory.v            - Coherence directory, sharer tracking
+cache/l2/l2_mshr.v                 - 16-entry L2 MSHR
+cache/l2/l2_prefetcher.v           - Stream prefetcher, 8 streams
+cache/l3/l3_cache.v                - 16MB 16-way LLC, 4-slice banked
+cache/l3/l3_slice.v                - L3 single slice (4096 sets)
+cache/l3/l3_tag.v                  - L3 tag array
+cache/l3/l3_data.v                 - L3 data array
+cache/common/cache_controller.v    - Generic cache FSM
+cache/common/coherence_unit.v      - MESI coherence engine
+cache/common/snoop_filter.v        - Duplicate tag snoop filter
+
+## Memory (12 modules)
+memory/sram/sram_sp_256x64.v       - SP SRAM 256x64
+memory/sram/sram_sp_512x128.v      - SP SRAM 512x128
+memory/sram/sram_sp_1024x64.v      - SP SRAM 1024x64
+memory/sram/sram_sp_2048x32.v      - SP SRAM 2048x32
+memory/sram/sram_sp_4096x64.v      - SP SRAM 4096x64
+memory/sram/sram_dp_256x64.v       - DP SRAM 256x64
+memory/sram/sram_dp_512x128.v      - DP SRAM 512x128
+memory/sram/sram_wrapper.v         - Parameterizable SRAM wrapper
+memory/regfile/regfile_2r1w_32x64.v  - 2R1W 32x64 register file
+memory/regfile/regfile_6r3w_64x64.v  - 6R3W 64x64 register file
+memory/regfile/regfile_10r6w_128x64.v - 10R6W 128x64 (physical regfile)
+memory/rom/boot_rom.v              - 4KB boot ROM, RISC-V boot code
+memory/rom/config_rom.v            - 2KB config ROM, device tree blob
+
+## Interconnect (19 modules)
+interconnect/axi4_xbar/axi4_crossbar.v  - Full 8x8 AXI4 crossbar
+interconnect/axi4_xbar/axi4_master_if.v - Master interface slice
+interconnect/axi4_xbar/axi4_slave_if.v  - Slave interface slice
+interconnect/axi4_xbar/axi4_arbiter.v   - Round-robin arbiter
+interconnect/axi4_xbar/axi4_decoder.v   - Address decoder
+interconnect/axi4_xbar/axi4_data_fifo.v - Data channel FIFO
+interconnect/axi4_xbar/axi4_err_slave.v - Error slave (DECERR)
+interconnect/axi4_xbar/axi4_id_remap.v  - Transaction ID remapping
+interconnect/noc/noc_router.v      - 5-port XY-routing mesh router
+interconnect/noc/noc_mesh_4x4.v    - 4x4 16-router mesh NoC
+interconnect/noc/noc_flit_if.v     - Flit interface converter
+interconnect/noc/noc_vc_allocator.v - Virtual channel allocator
+interconnect/noc/noc_switch_allocator.v - Switch allocator
+interconnect/noc/noc_input_buffer.v - Per-VC input buffer
+interconnect/apb/apb_bridge.v      - AXI4-L to APB3 bridge
+interconnect/apb/apb_mux.v         - APB master mux
+interconnect/apb/apb_decoder.v     - APB address decoder
+interconnect/ahb/ahb_bridge.v      - AXI4 to AHB5 bridge
+interconnect/ahb/ahb2axi_bridge.v  - AHB5 to AXI4 bridge
+
+## GPU (13 modules)
+gpu/shader/shader_core.v           - SIMT core, 32-wide warp, 8 warps
+gpu/shader/shader_alu.v            - 32-wide SIMD ALU
+gpu/shader/shader_sfu.v            - Special function unit (RCP/SQRT/SIN)
+gpu/rasterizer/rasterizer_top.v    - Rasterizer pipeline top
+gpu/rasterizer/triangle_setup.v    - Triangle edge equation setup
+gpu/rasterizer/fragment_gen.v      - Fragment/pixel generation
+gpu/texunit/texture_unit.v         - Texture pipeline top
+gpu/texunit/texture_filter.v       - Bilinear filter
+gpu/texunit/texture_cache.v        - Texture cache
+gpu/common/gpu_top.v               - GPU integration top
+gpu/common/gpu_command_proc.v      - Command processor, register file
+gpu/common/gpu_scheduler.v         - Warp scheduler to SM dispatch
+
+## DMA (5 modules)
+dma/dma_controller.v               - 8-channel DMA controller top
+dma/dma_channel.v                  - Single DMA channel FSM
+dma/dma_arbiter.v                  - Channel arbitration
+dma/dma_descriptor.v               - Scatter-gather descriptor table
+dma/dma_fifo.v                     - DMA data FIFO
+
+## Crypto (5 modules)
+crypto/aes_engine.v                - AES-128/256, 11-stage pipeline
+crypto/sha256_engine.v             - SHA-256, 64-round compression
+crypto/rng_engine.v                - TRNG + AES-CTR DRBG
+crypto/pka_engine.v                - Montgomery RSA/ECC multiplier
+crypto/crypto_top.v                - Crypto block integration
+
+## PCIe (5 modules)
+pcie/pcie_top.v                    - PCIe Gen4 x4 controller top
+pcie/pcie_phy.v                    - PHY: 8b/10b, CDR (behavioral)
+pcie/pcie_tl.v                     - Transaction layer: MRd/MWr TLPs
+pcie/pcie_dll.v                    - Data link layer: LCRC, retry
+pcie/pcie_config.v                 - PCIe Type-0 config space
+
+## USB (4 modules)
+usb/usb_top.v                      - USB 2.0 controller top
+usb/usb_phy.v                      - USB PHY (NRZI, differential)
+usb/usb_sie.v                      - Serial interface engine
+usb/usb_endpoint.v                 - Endpoint FIFO + flow control
+
+## Ethernet (7 modules)
+ethernet/eth_top.v                 - GbE controller top
+ethernet/eth_mac.v                 - 10/100/1000 MAC
+ethernet/eth_phy_if.v              - RGMII PHY interface
+ethernet/eth_rx.v                  - RX frame parser
+ethernet/eth_tx.v                  - TX frame builder
+ethernet/eth_crc.v                 - CRC-32 engine
+ethernet/eth_mdio.v                - MDIO management interface
+
+## Peripherals (18 modules)
+peripherals/uart/uart_top.v        - UART top + APB
+peripherals/uart/uart_tx.v         - UART transmitter
+peripherals/uart/uart_rx.v         - UART receiver
+peripherals/uart/uart_fifo.v       - RX/TX FIFOs
+peripherals/spi/spi_master.v       - SPI master controller
+peripherals/spi/spi_slave.v        - SPI slave
+peripherals/spi/spi_top.v          - SPI top + APB
+peripherals/i2c/i2c_master.v       - I2C master (4-phase)
+peripherals/i2c/i2c_slave.v        - I2C slave (address match)
+peripherals/i2c/i2c_top.v          - I2C top + APB
+peripherals/gpio/gpio_top.v        - GPIO controller (32-bit)
+peripherals/gpio/gpio_pad.v        - GPIO pad with pull-up/down
+peripherals/timer/timer_top.v      - 4-channel timer top
+peripherals/timer/timer_counter.v  - Up/down counter
+peripherals/timer/timer_comparator.v - Compare match
+peripherals/wdt/wdt_top.v          - Watchdog timer (key-serviced)
+peripherals/pwm/pwm_top.v          - 8-channel PWM top
+peripherals/pwm/pwm_channel.v      - Single PWM channel
+
+## Clock (8 modules)
+clock/pll_top.v                    - PLL top, 8 output clocks
+clock/pll_core.v                   - PLL behavioral model
+clock/pll_controller.v             - PLL configuration APB
+clock/clock_mux.v                  - Glitch-free 2:1 clock mux
+clock/clock_divider.v              - Parameterizable clock divider
+clock/clock_gating_cell.v          - ICG latch-based cell
+clock/dfs_controller.v             - Dynamic frequency scaling
+clock/clock_gen_top.v              - 15+ clock domain generator
+
+## Power (8 modules)
+power/power_switch.v               - Header power switch (HSVT)
+power/retention_flop.v             - Retention FF with shadow
+power/isolation_cell.v             - Level-up isolation (clamp)
+power/level_shifter.v              - Multi-supply level shifter
+power/voltage_regulator.v          - On-chip LDO behavioral model
+power/dvfs_controller.v            - DVFS state machine (8 levels)
+power/always_on_domain.v           - AO domain: PMU, wake logic
+power/power_controller.v           - Per-domain power FSM
+
+## Debug (5 modules)
+debug/jtag_tap.v                   - JTAG TAP, IEEE 1149.1 (16-state)
+debug/debug_module.v               - RISC-V Debug Module v0.13
+debug/debug_dtm.v                  - Debug Transport Module
+debug/debug_sbm.v                  - System Bus Master
+debug/trace_encoder.v              - Instruction trace encoder
+
+## CDC (6 modules)
+cdc/cdc_sync_2ff.v                 - 2-flop synchronizer
+cdc/cdc_pulse_sync.v               - Toggle-based pulse synchronizer
+cdc/cdc_gray_fifo.v                - Async FIFO (Gray code pointers)
+cdc/cdc_handshake.v                - 4-phase handshake
+cdc/cdc_mux_sync.v                 - Safe CDC multiplexer
+cdc/cdc_reset_sync.v               - Async assert / sync deassert reset
+
+## Reset (3 modules)
+reset/reset_controller.v           - Reset cause arbitration
+reset/por_gen.v                    - Power-on reset generator
+reset/reset_sync.v                 - Reset synchronizer wrapper
+
+## Security (4 modules)
+security/secure_boot.v             - Firmware hash verification
+security/firewall.v                - AXI access control (16 rules)
+security/pmp_unit.v                - RISC-V PMP (16 regions)
+security/key_store.v               - OTP-backed key storage (8 keys)
+
+## Top Level (1 module)
+top/soc_top.v                      - SoC integration top (all subsystems)
+
+## Total: 160 Verilog modules
